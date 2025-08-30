@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* --- GENERAL LAYOUT --- */
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #4285f4;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .settings-icon {
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .settings-icon:hover {
+      opacity: 1;
+    }
+
+    .controls {
+      padding: 10px 15px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 10px;
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      flex-grow: 1;
+      min-width: 150px;
+    }
+    
+    .button-container {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .search-box {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-right: 4px;
+    }
+
+    .add-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+
+    .add-btn:hover {
+      background: #218838;
+    }
+
+    .clear-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+
+    .clear-btn:hover {
+      background: #c82333;
+    }
+
+    .clipboard-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      background: white;
+    }
+
+    .clipboard-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .clipboard-item:hover {
+      background: #f8f9fa;
+    }
+    
+    .clipboard-item.pinned {
+      background: #fff9e6;
+    }
+
+    .item-content {
+      flex: 1;
+      margin-right: 15px;
+      min-width: 0;
+    }
+
+    .clipboard-text {
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 5px;
+      word-wrap: break-word;
+      max-height: 80px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+    }
+
+    .clipboard-meta {
+      font-size: 11px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .item-actions {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .copy-icon, .pin-icon, .delete-icon, .qr-icon {
+      cursor: pointer;
+      margin-left: 10px;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .pin-icon {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .pin-icon.pinned {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-lock-fill' viewBox='0 0 16 16'%3e%3cpath d='M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z'/%3e%3c/svg%3e");
+    }
+
+    .pin-icon.unpinned {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-unlock-fill' viewBox='0 0 16 16'%3e%3cpath d='M11 1a2 2 0 0 0-2 2v4a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h5V3a3 3 0 0 1 6 0v4a.5.5 0 0 1-1 0V3a2 2 0 0 0-2-2z'/%3e%3c/svg%3e");
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .item-count {
+      font-size: 14px;
+      font-weight: 400;
+    }
+    
+    .match-count {
+      font-size: 12px;
+      color: #666;
+      min-width: 60px;
+      text-align: left;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      padding: 20px;
+      border-radius: 5px;
+      width: 280px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .modal-content #qrcode {
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modal-content #qrcode img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Settings Modal Specific Styles */
+    .settings-modal .modal-content {
+      width: 400px;
+      text-align: left;
+    }
+
+    .settings-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .setting-group {
+      margin-bottom: 20px;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .setting-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .setting-description {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .settings-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 25px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-primary {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-primary:hover {
+      background: #3367d6;
+    }
+
+    .close-modal-btn {
+      color: #aaa;
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    
+    .close-modal-btn:hover,
+    .close-modal-btn:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    /* Scrollbar styling */
+    .clipboard-list::-webkit-scrollbar { width: 6px; }
+    .clipboard-list::-webkit-scrollbar-track { background: #f1f1f1; }
+    .clipboard-list::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    .clipboard-list::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+
+    @media (max-width: 390px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-container {
+        min-width: 100%;
+      }
+
+      .button-container {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .settings-modal .modal-content {
+        width: 320px;
+      }
+    }
+
+    .source-link {
+      color: #4285f4;
+      text-decoration: none;
+    }
+
+    .source-link:hover {
+      color: #1a73e8;
+      text-decoration: underline;
+    }
+
+    .source-link:visited {
+      color: #5f6368;
+    }
+
+    /* Dark Mode Variables and Styles */
+    :root {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: white;
+      --bg-tertiary: #f8f9fa;
+      --bg-accent: #fff9e6;
+      --text-primary: #333;
+      --text-secondary: #666;
+      --text-meta: #666;
+      --border-color: #e0e0e0;
+      --border-light: #e9ecef;
+      --border-modal: #eee;
+      --shadow-modal: rgba(0,0,0,0.6);
+      --scrollbar-track: #f1f1f1;
+      --scrollbar-thumb: #c1c1c1;
+      --scrollbar-hover: #a1a1a1;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2d2d2d;
+      --bg-tertiary: #3a3a3a;
+      --bg-accent: #404040;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-meta: #888;
+      --border-color: #404040;
+      --border-light: #3a3a3a;
+      --border-modal: #404040;
+      --shadow-modal: rgba(0,0,0,0.8);
+      --scrollbar-track: #2d2d2d;
+      --scrollbar-thumb: #666;
+      --scrollbar-hover: #777;
+    }
+
+    /* Apply theme variables */
+    html, body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .controls {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .search-box {
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .clipboard-list {
+      background: var(--bg-secondary);
+    }
+
+    .clipboard-item {
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-primary);
+    }
+
+    .clipboard-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .clipboard-item.pinned {
+      background: var(--bg-accent);
+    }
+
+    .clipboard-meta {
+      color: var(--text-meta);
+    }
+
+    .modal {
+      background-color: var(--shadow-modal);
+    }
+
+    .modal-content {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      margin-top: 150px;
+      padding-top: 50px;
+    }
+
+    .setting-input {
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .settings-buttons {
+      border-top: 1px solid var(--border-modal);
+    }
+
+    .empty-state {
+      color: var(--text-secondary);
+    }
+
+    /* Toggle Switch Styles */
+    .theme-toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: #4285f4;
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+
+    [data-theme="dark"] .toggle-slider {
+      background-color: #555;
+    }
+
+    [data-theme="dark"] .toggle-slider:before {
+      background-color: #e0e0e0;
+    }
+
+    .theme-label {
+      font-size: 14px;
+      color: var(--text-primary);
+      min-width: 80px;
+    }
+
+    /* Keyboard shortcuts styling */
+    .shortcut-info {
+      padding: 10px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .shortcut-info p {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .shortcut-info strong {
+      color: var(--text-primary);
+    }
+
+    /* Dark mode scrollbar */
+    .clipboard-list::-webkit-scrollbar-track { 
+      background: var(--scrollbar-track); 
+    }
+    
+    .clipboard-list::-webkit-scrollbar-thumb { 
+      background: var(--scrollbar-thumb); 
+    }
+    
+    .clipboard-list::-webkit-scrollbar-thumb:hover { 
+      background: var(--scrollbar-hover); 
+    }
+
+    /* Dark Mode Action Buttons */
+    [data-theme="dark"] .copy-icon,
+    [data-theme="dark"] .delete-icon,
+    [data-theme="dark"] .qr-icon {
+      filter: invert(0.8) brightness(1.2);
+      opacity: 0.9;
+    }
+
+    [data-theme="dark"] .copy-icon:hover,
+    [data-theme="dark"] .delete-icon:hover,
+    [data-theme="dark"] .qr-icon:hover {
+      filter: invert(1) brightness(1.5);
+      opacity: 1;
+    }
+
+    /* Dark mode pin icons */
+    [data-theme="dark"] .pin-icon.pinned {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23e0e0e0' class='bi bi-lock-fill' viewBox='0 0 16 16'%3e%3cpath d='M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z'/%3e%3c/svg%3e");
+      opacity: 0.9;
+    }
+
+    [data-theme="dark"] .pin-icon.unpinned {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23e0e0e0' class='bi bi-unlock-fill' viewBox='0 0 16 16'%3e%3cpath d='M11 1a2 2 0 0 0-2 2v4a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h5V3a3 3 0 0 1 6 0v4a.5.5 0 0 1-1 0V3a2 2 0 0 0-2-2z'/%3e%3c/svg%3e");
+      opacity: 0.9;
+    }
+
+    [data-theme="dark"] .pin-icon:hover {
+      opacity: 1;
+    }
+
+    /* Dark mode button styling */
+    [data-theme="dark"] .add-btn {
+      background: #28a745;
+      border: 1px solid #34ce57;
+    }
+
+    [data-theme="dark"] .add-btn:hover {
+      background: #34ce57;
+    }
+
+    [data-theme="dark"] .clear-btn {
+      background: #dc3545;
+      border: 1px solid #e74c3c;
+    }
+
+    [data-theme="dark"] .clear-btn:hover {
+      background: #e74c3c;
+    }
+
+    [data-theme="dark"] .btn-primary {
+      background: #4285f4;
+      border: 1px solid #5294f5;
+    }
+
+    [data-theme="dark"] .btn-primary:hover {
+      background: #5294f5;
+    }
+
+    [data-theme="dark"] .btn-secondary {
+      background: #6c757d;
+      border: 1px solid #7c8690;
+    }
+
+    [data-theme="dark"] .btn-secondary:hover {
+      background: #7c8690;
+    }
+
+    /* Improve dark mode link visibility */
+    [data-theme="dark"] .source-link {
+      color: #5294f5;
+    }
+
+    [data-theme="dark"] .source-link:hover {
+      color: #6ba3f6;
+    }
+
+    [data-theme="dark"] .source-link:visited {
+      color: #9bb3d4;
+    }
+
+    /* Dark Mode Settings Modal Specific Styling */
+    [data-theme="dark"] .settings-title {
+      color: #e0e0e0;
+    }
+
+    [data-theme="dark"] .setting-label {
+      color: #e0e0e0;
+    }
+
+    [data-theme="dark"] .setting-description {
+      color: #b0b0b0;
+    }
+
+    [data-theme="dark"] .setting-input:focus {
+      border-color: #5294f5;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(82, 148, 245, 0.2);
+    }
+
+    [data-theme="dark"] .close-modal-btn {
+      color: #b0b0b0;
+    }
+
+    [data-theme="dark"] .close-modal-btn:hover,
+    [data-theme="dark"] .close-modal-btn:focus {
+      color: #e0e0e0;
+    }
+
+    /* Dark mode toggle switch improvements */
+    [data-theme="dark"] input:checked + .toggle-slider {
+      background-color: #5294f5;
+    }
+
+    [data-theme="dark"] .toggle-slider {
+      background-color: #4a4a4a;
+    }
+
+    [data-theme="dark"] .toggle-slider:before {
+      background-color: #e0e0e0;
+    }
+
+    /* Dark mode input placeholder */
+    [data-theme="dark"] .search-box::placeholder {
+      color: #888;
+    }
+
+    [data-theme="dark"] .setting-input::placeholder {
+      color: #888;
+    }
+
+    /* Dark mode input focus for search box */
+    [data-theme="dark"] .search-box:focus {
+      border-color: #5294f5;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(82, 148, 245, 0.1);
+    }
+
+    /* RTL Support for Persian and Arabic Text */
+    .rtl-content {
+      direction: rtl;
+      text-align: right;
+    }
+
+    .rtl-content .clipboard-text {
+      direction: rtl;
+      text-align: right;
+      unicode-bidi: embed;
+    }
+
+    .rtl-content .clipboard-meta {
+      direction: rtl;
+      text-align: right;
+      flex-direction: row-reverse;
+    }
+
+    /* RTL support for search box when typing RTL languages */
+    .search-box:focus {
+      unicode-bidi: plaintext;
+    }
+
+    .search-box[dir="rtl"] {
+      direction: rtl;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span>Clipo</span>
+    <div class="header-right">
+      <span class="item-count" id="itemCount">0 items</span>
+      <img src="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='white' class='bi bi-gear-fill' viewBox='0 0 16 16'%3e%3cpath d='M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z'/%3e%3c/svg%3e" 
+           class="settings-icon" id="settingsIcon" title="Settings">
+    </div>
+  </div>
+  
+  <div class="controls">
+    <div class="search-container">
+      <input type="text" class="search-box" id="searchBox" placeholder="Search or add new item...">
+      <span class="match-count" id="matchCount"></span>
+    </div>
+    <div class="button-container">
+      <button class="add-btn" id="addBtn">Save</button>
+      <button class="clear-btn" id="clearBtn">Clear All</button>
+    </div>
+  </div>
+  
+  <div class="clipboard-list" id="clipboardList">
+    <div class="empty-state">
+      No clipboard history yet. Start copying text to see it here!
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div id="qrModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal-btn" id="closeQrModal">&times;</span>
+      <div id="qrcode"></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal settings-modal">
+    <div class="modal-content">
+      <span class="close-modal-btn" id="closeSettingsModal">&times;</span>
+      <div class="settings-title">Clipo Settings</div>
+      
+      <div class="setting-group">
+        <label class="setting-label" for="maxItemsSetting">Maximum Items to Keep</label>
+        <input type="number" 
+               class="setting-input" 
+               id="maxItemsSetting" 
+               min="10" 
+               max="10000" 
+               value="1000">
+        <div class="setting-description">
+          Set how many clipboard items to store. Older items will be automatically removed when this limit is reached. (10-10,000 items)
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label" for="autoCleanupSetting">Auto-cleanup Interval (days)</label>
+        <input type="number" 
+               class="setting-input" 
+               id="autoCleanupSetting" 
+               min="0" 
+               max="365" 
+               value="0">
+        <div class="setting-description">
+          Automatically delete items older than this many days. Set to 0 to disable auto-cleanup.
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Theme</label>
+        <div class="theme-toggle-container">
+          <label class="toggle-switch">
+            <input type="checkbox" id="darkModeSetting">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="theme-label" id="themeLabel">Light Mode</span>
+        </div>
+        <div class="setting-description">
+          Switch between light and dark theme for the extension interface.
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Keyboard Shortcut</label>
+        <div class="shortcut-info">
+          <p>Default shortcut: <strong>Ctrl+Shift+V</strong> (Cmd+Shift+V on Mac)</p>
+          <button class="btn-primary" id="shortcutsLink" style="font-size: 12px; padding: 6px 12px;">
+            Configure Chrome Shortcuts
+          </button>
+        </div>
+        <div class="setting-description">
+          Set a custom keyboard shortcut to quickly open the clipboard history panel.
+        </div>
+      </div>
+
+      <div class="settings-buttons">
+        <button class="btn-secondary" id="cancelSettings">Cancel</button>
+        <button class="btn-primary" id="saveSettings">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="qrcode.min.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
